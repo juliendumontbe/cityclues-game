@@ -5,58 +5,72 @@
 <title>CityClues – Quiz</title>
 
 <style>
+
 body {
     margin: 0;
     font-family: Arial, Helvetica, sans-serif;
     background-color: #0f172a;
     color: white;
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     background-size: cover;
     background-position: center;
+    padding: 24px;
+    box-sizing: border-box;
 }
 
 #container {
-    width: 900px;
+    width: min(900px, 100%);
     background: rgba(0,0,0,0.75);
-    padding: 30px;
+    padding: clamp(18px, 3vw, 30px);
     border-radius: 14px;
     text-align: center;
+    box-sizing: border-box;
+    margin-top: 24px;
 }
 
 #logo {
-    max-height: 70px;
+    max-height: clamp(50px, 8vh, 70px);
+    max-width: 100%;
     margin-bottom: 15px;
 }
 
 h1 {
     margin-bottom: 20px;
+    font-size: clamp(26px, 3vw, 38px);
 }
 
 #controls {
     margin-bottom: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 input {
     padding: 10px;
-    font-size: 18px;
-    width: 280px;
+    font-size: clamp(16px, 2vw, 18px);
+    width: min(320px, 100%);
+    box-sizing: border-box;
 }
 
 button {
     padding: 10px 16px;
-    font-size: 18px;
-    margin-left: 8px;
+    font-size: clamp(16px, 2vw, 18px);
+    margin-left: 0;
     cursor: pointer;
 }
 
 #stats {
     display: flex;
     justify-content: space-around;
+    gap: 12px;
     margin-bottom: 20px;
-    font-size: 18px;
+    font-size: clamp(16px, 2vw, 18px);
+    flex-wrap: wrap;
 }
 
 #feedback {
@@ -77,12 +91,13 @@ button {
     background: rgba(255,255,255,0.08);
     border-radius: 12px;
     padding: 20px;
-    height: 350px;
+    height: clamp(260px, 42vh, 350px);
     overflow-y: auto;
+    box-sizing: border-box;
 }
 
 #hints {
-    min-height: 300px;
+    min-height: 240px;
 }
 
 #success {
@@ -97,7 +112,7 @@ button {
 }
 
 .hint {
-    font-size: 22px;
+    font-size: clamp(18px, 2vw, 22px);
     margin: 6px 0;
     text-align: center;
     transition: all 0.3s;
@@ -110,6 +125,48 @@ button {
 .hint.new {
     color: white;
 }
+
+@media (max-height: 750px) {
+    body {
+        padding: 12px;
+    }
+
+    #container {
+        margin-top: 0;
+        padding: 18px;
+    }
+
+    h1 {
+        margin-bottom: 14px;
+    }
+
+    #logo {
+        max-height: 55px;
+    }
+
+    #gameFrame {
+        height: 300px;
+    }
+}
+
+@media (max-width: 700px) {
+    #controls {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    input,
+    button {
+        width: 100%;
+        max-width: 340px;
+    }
+
+    #stats {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
 </style>
 </head>
 
@@ -122,13 +179,6 @@ button {
 
     <div id="controls">
 
-    <button onclick="exportEvents()">
-Export events
-</button>
-
-<button onclick="clearEvents()">
-Clear events
-</button>
 
         <input id="guessInput" placeholder="Your guess..." disabled>
         <button id="checkBtn" onclick="checkGuess()" disabled>Check</button>
@@ -421,17 +471,22 @@ function generateHints(city, hints) {
         finalHints = finalHints.concat(shuffledStageHints);
     });
 
-    return finalHints
-        .map(hint =>
-            applyTemplate(hint.hint_template, city)
-        )
-        .filter(text =>
-            text &&
-            !text.includes("{") &&
-            !text.includes("}")
-        );
-}
+return finalHints
+    .map(hint => {
+        const hintText = applyTemplate(hint.hint_template, city);
 
+        return {
+            hint_id: hint.hint_id,
+            hint_stage: hint.hint_stage,
+            hint_text: hintText
+        };
+    })
+    .filter(hint =>
+        hint.hint_text &&
+        !hint.hint_text.includes("{") &&
+        !hint.hint_text.includes("}")
+    );
+}
 function applyTemplate(template, city) {
     return template.replace(/\{([^}]+)\}/g, function(match, fieldName) {
         const normalizedField = fieldName.trim().toLowerCase();
@@ -582,49 +637,42 @@ function showHint() {
         h.classList.add("old");
     });
 
-    const currentHintStage = hintIndex + 1;
-logEvent(
-    "hint_requested",
-    {
-        response_time_sec:
-            secondsSinceLastEvent(),
+    const currentHint = currentHints[hintIndex];
 
-        hint_stage:
-            currentHintStage
-    },
-
-    currentHintStage
-);
+    logEvent(
+        "hint_requested",
+        {
+            response_time_sec: secondsSinceLastEvent(),
+            hint_stage: currentHint.hint_stage
+        },
+        currentHint.hint_id
+    );
 
     const div = document.createElement("div");
-
-    
-
     div.className = "hint new";
-    div.textContent = currentHints[hintIndex];
+    div.textContent = currentHint.hint_text;
     document.getElementById("hints").appendChild(div);
 
     logEvent(
-    "hint_shown",
-    {
-        hint_stage:
-            currentHintStage
-    },
-
-    currentHintStage
-);
+        "hint_shown",
+        {
+            hint_stage: currentHint.hint_stage
+        },
+        currentHint.hint_id
+    );
 
     document.getElementById("gameFrame").scrollTop =
-    document.getElementById("gameFrame").scrollHeight;
+        document.getElementById("gameFrame").scrollHeight;
 
     hintIndex++;
     hintsUsed++;
     document.getElementById("hintsCount").textContent = hintsUsed;
 
     showFeedback("New hint!", "hint");
+
     if (hintIndex >= currentHints.length) {
-    document.getElementById("mainBtn").textContent = "Reveal answer";
-}
+        document.getElementById("mainBtn").textContent = "Reveal answer";
+    }
 }
 
 function checkGuess() {
@@ -695,12 +743,6 @@ function endGame() {
     logEvent(
     "session_ended",
     {
-        session_result: "failed"
-    }
-);
-    logEvent(
-    "session_ended",
-    {
         session_result: "success"
     }
 );
@@ -728,6 +770,13 @@ function loseGame() {
     savePlayedCity(currentCity.city_id);
     incrementGamesPlayedCount();
     clearInterval(timerInterval);
+
+    logEvent(
+    "session_ended",
+    {
+        session_result: "failed"
+    }
+);
 
     document.getElementById("success").style.color = "#ffb84d";
     document.getElementById("success").textContent =
