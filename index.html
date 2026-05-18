@@ -121,6 +121,15 @@ button {
     <h1>QUIZ – Guess the correct city!</h1>
 
     <div id="controls">
+
+    <button onclick="exportEvents()">
+Export events
+</button>
+
+<button onclick="clearEvents()">
+Clear events
+</button>
+
         <input id="guessInput" placeholder="Your guess..." disabled>
         <button id="checkBtn" onclick="checkGuess()" disabled>Check</button>
         <button id="mainBtn" onclick="handleMain()">Start</button>
@@ -156,6 +165,134 @@ let errors = 0;
 let seconds = 0;
 let timerInterval = null;
 document.getElementById("mainBtn").disabled = true;
+
+let currentSessionId = null;
+let currentEventSequence = 0;
+let lastEventTimestamp = null;
+
+function generateSessionId() {
+    return "RS" + Date.now();
+}
+
+function generateEventId() {
+    return "R" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+}
+
+function getStoredEvents() {
+    return JSON.parse(
+        localStorage.getItem("cityclues_events") || "[]"
+    );
+}
+
+function saveEvent(event) {
+    const events = getStoredEvents();
+
+    events.push(event);
+
+    localStorage.setItem(
+        "cityclues_events",
+        JSON.stringify(events)
+    );
+}
+
+function getNowTimestamp() {
+    return new Date()
+        .toISOString()
+        .slice(0, 19)
+        .replace("T", " ");
+}
+
+function secondsSinceLastEvent() {
+
+    if (!lastEventTimestamp) {
+        return null;
+    }
+
+    const now = new Date();
+
+    return Math.round(
+        (now - lastEventTimestamp) / 1000
+    );
+}
+
+function logEvent(
+    eventType,
+    payload = {},
+    hintId = null
+) {
+
+    if (!currentSessionId) return;
+
+    currentEventSequence++;
+
+    const event = {
+
+        event_id: generateEventId(),
+
+        session_id: currentSessionId,
+
+        city_id: currentCity.city_id,
+
+        hint_id: hintId,
+
+        event_type: eventType,
+
+        payload: payload,
+
+        event_ts: getNowTimestamp(),
+
+        event_sequence: currentEventSequence,
+
+        event_source: "game_app",
+
+        is_simulated: 0
+    };
+
+    saveEvent(event);
+
+    lastEventTimestamp = new Date();
+
+    console.log("EVENT:", event);
+}
+
+function exportEvents() {
+
+    const events = getStoredEvents();
+
+    if (events.length === 0) {
+        alert("No events found.");
+        return;
+    }
+
+    const blob = new Blob(
+        [JSON.stringify(events, null, 2)],
+        { type: "application/json" }
+    );
+
+    const today =
+        new Date().toISOString().slice(0, 10);
+
+    const filename =
+        `cityclues_events_${today}.json`;
+
+    const link = document.createElement("a");
+
+    link.href =
+        URL.createObjectURL(blob);
+
+    link.download = filename;
+
+    link.click();
+}
+
+function clearEvents() {
+
+    localStorage.removeItem(
+        "cityclues_events"
+    );
+
+    alert("Stored events cleared.");
+}
 
 async function loadGameData() {
     try {
@@ -206,6 +343,20 @@ function startGame() {
 
     currentCity = selectCity();
     currentHints = generateHints(currentCity, hintDefinitions);
+
+    currentSessionId = generateSessionId();
+
+currentEventSequence = 0;
+
+lastEventTimestamp = new Date();
+
+logEvent(
+    "session_started",
+    {
+        difficulty_at_start:
+            currentCity.difficulty_initial
+    }
+);
 
     started = true;
     document.getElementById("guessInput").disabled = false;
@@ -431,10 +582,37 @@ function showHint() {
         h.classList.add("old");
     });
 
+    const currentHintStage = hintIndex + 1;
+logEvent(
+    "hint_requested",
+    {
+        response_time_sec:
+            secondsSinceLastEvent(),
+
+        hint_stage:
+            currentHintStage
+    },
+
+    currentHintStage
+);
+
     const div = document.createElement("div");
+
+    
+
     div.className = "hint new";
     div.textContent = currentHints[hintIndex];
     document.getElementById("hints").appendChild(div);
+
+    logEvent(
+    "hint_shown",
+    {
+        hint_stage:
+            currentHintStage
+    },
+
+    currentHintStage
+);
 
     document.getElementById("gameFrame").scrollTop =
     document.getElementById("gameFrame").scrollHeight;
@@ -454,6 +632,23 @@ function checkGuess() {
 
     const guess = normalizeText(document.getElementById("guessInput").value);
     const answer = normalizeText(currentCity.city_name);
+
+    const isCorrect =
+    guess === answer ? 1 : 0;
+
+logEvent(
+    "guess_submitted",
+    {
+        response_time_sec:
+            secondsSinceLastEvent(),
+
+        guess_text:
+            document.getElementById("guessInput").value,
+
+        is_correct:
+            isCorrect
+    }
+);
 
     if (guess === answer) {
         endGame();
@@ -496,6 +691,19 @@ function endGame() {
     savePlayedCity(currentCity.city_id);
     incrementGamesPlayedCount();
     clearInterval(timerInterval);
+
+    logEvent(
+    "session_ended",
+    {
+        session_result: "failed"
+    }
+);
+    logEvent(
+    "session_ended",
+    {
+        session_result: "success"
+    }
+);
 
 document.getElementById("success").textContent =
     "Congratulations! You found " + currentCity.city_name + "!";
