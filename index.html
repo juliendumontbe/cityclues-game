@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CityClues – Quiz</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #0f172a;
+    color: white;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-size: cover;
+    background-position: center;
+}
+
+#container {
+    width: 900px;
+    background: rgba(0,0,0,0.75);
+    padding: 30px;
+    border-radius: 14px;
+    text-align: center;
+}
+
+#logo {
+    max-height: 70px;
+    margin-bottom: 15px;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+#controls {
+    margin-bottom: 15px;
+}
+
+input {
+    padding: 10px;
+    font-size: 18px;
+    width: 280px;
+}
+
+button {
+    padding: 10px 16px;
+    font-size: 18px;
+    margin-left: 8px;
+    cursor: pointer;
+}
+
+#stats {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+    font-size: 18px;
+}
+
+#feedback {
+    height: 30px;
+    font-size: 22px;
+    margin-bottom: 10px;
+}
+
+#feedback.error {
+    color: #ff4d4d;
+}
+
+#feedback.hint {
+    color: #4da6ff;
+}
+
+#gameFrame {
+    background: rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 20px;
+    height: 350px;
+    overflow-y: auto;
+}
+
+#hints {
+    min-height: 300px;
+}
+
+#success {
+    font-size: 26px;
+    color: #7CFC98;
+    margin-bottom: 10px;
+}
+
+#summary {
+    font-size: 18px;
+    margin-bottom: 20px;
+}
+
+.hint {
+    font-size: 22px;
+    margin: 6px 0;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.hint.old {
+    color: #9ca3af;
+}
+
+.hint.new {
+    color: white;
+}
+</style>
+</head>
+
+<body>
+
+<div id="container">
+    <img src="logo.png" id="logo" alt="CityClues">
+
+    <h1>QUIZ – Guess the correct city!</h1>
+
+    <div id="controls">
+        <input id="guessInput" placeholder="Your guess..." disabled>
+        <button id="checkBtn" onclick="checkGuess()" disabled>Check</button>
+        <button id="mainBtn" onclick="handleMain()">Start</button>
+    </div>
+
+    <div id="stats">
+        <div>Hints: <span id="hintsCount">0</span></div>
+        <div>Attempts: <span id="errorsCount">0</span></div>
+        <div>Time: <span id="timer">00:00</span></div>
+    </div>
+
+    <div id="feedback"></div>
+
+    <div id="gameFrame">
+        <div id="success"></div>
+        <div id="summary"></div>
+        <div id="hints"></div>
+    </div>
+</div>
+
+
+<script>
+let cities = [];
+let hintDefinitions = [];
+let currentCity = null;
+let currentHints = [];
+
+let started = false;
+let finished = false;
+let hintIndex = 0;
+let hintsUsed = 0;
+let errors = 0;
+let seconds = 0;
+let timerInterval = null;
+document.getElementById("mainBtn").disabled = true;
+
+async function loadGameData() {
+    try {
+        const citiesResponse = await fetch("cities.json");
+        const hintsResponse = await fetch("hints.json");
+
+        if (!citiesResponse.ok || !hintsResponse.ok) {
+            throw new Error("Could not load JSON files.");
+        }
+
+        cities = await citiesResponse.json();
+        hintDefinitions = await hintsResponse.json();
+
+        console.log("Cities loaded:", cities.length);
+        console.log("Hints loaded:", hintDefinitions.length);
+
+        document.getElementById("mainBtn").disabled = false;
+        showFeedback("Game data loaded.", "hint");
+    } catch (error) {
+        console.error("Loading error:", error);
+        showFeedback("Could not load game data.", "error");
+    }
+}
+
+loadGameData();
+
+document.getElementById("guessInput").addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+        checkGuess();
+    }
+});
+
+function handleMain() {
+    if (!started) {
+        startGame();
+    } else if (hintIndex >= currentHints.length) {
+        loseGame();
+    } else {
+        showHint();
+    }
+}
+
+function startGame() {
+    if (cities.length === 0 || hintDefinitions.length === 0) {
+        showFeedback("Game data is still loading.", "error");
+        return;
+    }
+
+    currentCity = selectCity();
+    currentHints = generateHints(currentCity, hintDefinitions);
+
+    started = true;
+    document.getElementById("guessInput").disabled = false;
+    document.getElementById("checkBtn").disabled = false;
+    document.getElementById("mainBtn").textContent = "Next hint";
+
+    startTimer();
+    showHint();
+}
+
+function shouldShowHint(hint, city) {
+    const hintType = hint.hint_type.toLowerCase();
+
+    const weatherHints = ["weather_temp", "weather_type"];
+    const timeHints = ["local_time"];
+
+    if (weatherHints.includes(hintType) && Number(city.is_weather_available) !== 1) {
+        return false;
+    }
+
+    if (timeHints.includes(hintType) && Number(city.is_local_time_available) !== 1) {
+        return false;
+    }
+
+    return true;
+}
+
+
+function shuffleArray(array) {
+    return array.sort(() => Math.random() - 0.5);
+}
+
+function generateHints(city, hints) {
+
+    const filteredHints = hints.filter(hint =>
+        shouldShowHint(hint, city)
+    );
+
+    const groupedByStage = {};
+
+    filteredHints.forEach(hint => {
+        const stage = hint.hint_stage;
+
+        if (!groupedByStage[stage]) {
+            groupedByStage[stage] = [];
+        }
+
+        groupedByStage[stage].push(hint);
+    });
+
+    const orderedStages = Object.keys(groupedByStage)
+        .map(Number)
+        .sort((a, b) => a - b);
+
+    let finalHints = [];
+
+    orderedStages.forEach(stage => {
+
+        const shuffledStageHints =
+            shuffleArray(groupedByStage[stage]);
+
+        finalHints = finalHints.concat(shuffledStageHints);
+    });
+
+    return finalHints
+        .map(hint =>
+            applyTemplate(hint.hint_template, city)
+        )
+        .filter(text =>
+            text &&
+            !text.includes("{") &&
+            !text.includes("}")
+        );
+}
+
+function applyTemplate(template, city) {
+    return template.replace(/\{([^}]+)\}/g, function(match, fieldName) {
+        const normalizedField = fieldName.trim().toLowerCase();
+
+        if (normalizedField === "local_time_live") {
+            return formatValue(normalizedField, null);
+        }
+
+        if (city[normalizedField] === null || city[normalizedField] === undefined || city[normalizedField] === "") {
+            return match;
+        }
+
+        return formatValue(normalizedField, city[normalizedField]);
+    });
+}
+
+function getLiveLocalTime(city) {
+    if (city.timezone_offset_sec === null || city.timezone_offset_sec === undefined) {
+        return null;
+    }
+
+    const nowUtc = new Date();
+
+    const utcMs =
+        nowUtc.getTime() + nowUtc.getTimezoneOffset() * 60000;
+
+    const localMs =
+        utcMs + Number(city.timezone_offset_sec) * 1000;
+
+    const localDate = new Date(localMs);
+
+    return localDate.toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+}
+
+
+function formatValue(field, value) {
+    if (field === "local_time_live") {
+        return getLiveLocalTime(currentCity);
+    }
+
+    if (field === "temperature") {
+        return `${Math.round(value)}°C`;
+    }
+
+    if (field === "is_capital") {
+        return value === 1 || value === true
+            ? "a capital"
+            : "not a capital";
+    }
+
+    if (field === "utc_offset_hours") {
+        return `UTC${value >= 0 ? "+" : ""}${value}`;
+    }
+
+    return value;
+}
+
+function getPlayedCityIds() {
+    return JSON.parse(
+        localStorage.getItem("playedCityIds") || "[]"
+    );
+}
+
+function savePlayedCity(cityId) {
+    const played = getPlayedCityIds();
+
+    if (!played.includes(cityId)) {
+        played.push(cityId);
+    }
+
+    localStorage.setItem(
+        "playedCityIds",
+        JSON.stringify(played)
+    );
+}
+
+function getGamesPlayedCount() {
+    return Number(
+        localStorage.getItem("gamesPlayedCount") || 0
+    );
+}
+
+function incrementGamesPlayedCount() {
+    const count = getGamesPlayedCount() + 1;
+
+    localStorage.setItem(
+        "gamesPlayedCount",
+        count
+    );
+}
+
+function selectCity() {
+
+    const playedCityIds = getPlayedCityIds();
+    const gamesPlayed = getGamesPlayedCount();
+
+    let maxDifficulty;
+
+    if (gamesPlayed < 2) {
+        maxDifficulty = 0.25;
+    } else if (gamesPlayed < 5) {
+        maxDifficulty = 0.45;
+    } else {
+        maxDifficulty = 1.00;
+    }
+
+    let cityPool = cities.filter(city =>
+        Number(city.difficulty_initial) <= maxDifficulty &&
+        !playedCityIds.includes(city.city_id)
+    );
+
+    if (cityPool.length === 0) {
+
+        cityPool = cities.filter(city =>
+            !playedCityIds.includes(city.city_id)
+        );
+    }
+
+    if (cityPool.length === 0) {
+
+        localStorage.removeItem("playedCityIds");
+
+        cityPool = cities;
+    }
+
+    return cityPool[
+        Math.floor(Math.random() * cityPool.length)
+    ];
+}
+
+function startTimer() {
+    timerInterval = setInterval(() => {
+        seconds++;
+        const m = String(Math.floor(seconds / 60)).padStart(2, "0");
+        const s = String(seconds % 60).padStart(2, "0");
+        document.getElementById("timer").textContent = `${m}:${s}`;
+    }, 1000);
+}
+
+function showHint() {
+    if (finished || hintIndex >= currentHints.length) return;
+
+    document.querySelectorAll(".hint").forEach(h => {
+        h.classList.remove("new");
+        h.classList.add("old");
+    });
+
+    const div = document.createElement("div");
+    div.className = "hint new";
+    div.textContent = currentHints[hintIndex];
+    document.getElementById("hints").appendChild(div);
+
+    document.getElementById("gameFrame").scrollTop =
+    document.getElementById("gameFrame").scrollHeight;
+
+    hintIndex++;
+    hintsUsed++;
+    document.getElementById("hintsCount").textContent = hintsUsed;
+
+    showFeedback("New hint!", "hint");
+    if (hintIndex >= currentHints.length) {
+    document.getElementById("mainBtn").textContent = "Reveal answer";
+}
+}
+
+function checkGuess() {
+    if (finished) return;
+
+    const guess = normalizeText(document.getElementById("guessInput").value);
+    const answer = normalizeText(currentCity.city_name);
+
+    if (guess === answer) {
+        endGame();
+    } else {
+        errors++;
+        document.getElementById("errorsCount").textContent = errors;
+        showFeedback("Wrong guess!", "error");
+    }
+}
+
+function normalizeText(text) {
+    return text
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+}
+
+function showFeedback(text, type) {
+    const fb = document.getElementById("feedback");
+    fb.textContent = text;
+    fb.className = type;
+
+    setTimeout(() => {
+        fb.textContent = "";
+        fb.className = "";
+    }, 900);
+}
+
+function scrollGameFrameToTop() {
+    document.getElementById("gameFrame").scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+}
+
+
+function endGame() {
+    finished = true;
+    savePlayedCity(currentCity.city_id);
+    incrementGamesPlayedCount();
+    clearInterval(timerInterval);
+
+document.getElementById("success").textContent =
+    "Congratulations! You found " + currentCity.city_name + "!";
+
+    document.getElementById("summary").innerHTML = `
+        Hints used: ${hintsUsed}<br>
+        Attempts: ${errors}<br>
+        Total time: ${document.getElementById("timer").textContent}
+    `;
+
+    scrollGameFrameToTop();
+
+    document.getElementById("guessInput").disabled = true;
+    document.getElementById("checkBtn").disabled = true;
+    document.getElementById("mainBtn").textContent = "Play again";
+    document.getElementById("mainBtn").disabled = false;
+    document.getElementById("mainBtn").onclick = resetGame;
+}
+
+function loseGame() {
+    finished = true;
+    savePlayedCity(currentCity.city_id);
+    incrementGamesPlayedCount();
+    clearInterval(timerInterval);
+
+    document.getElementById("success").style.color = "#ffb84d";
+    document.getElementById("success").textContent =
+        "Not this time! The correct city was " + currentCity.city_name + ".";
+
+    document.getElementById("summary").innerHTML = `
+        Better luck next time.<br>
+        Hints used: ${hintsUsed}<br>
+        Attempts: ${errors}<br>
+        Total time: ${document.getElementById("timer").textContent}
+    `;
+
+    scrollGameFrameToTop();
+
+    document.getElementById("guessInput").disabled = true;
+    document.getElementById("checkBtn").disabled = true;
+
+    document.getElementById("mainBtn").textContent = "Play again";
+    document.getElementById("mainBtn").disabled = false;
+    document.getElementById("mainBtn").onclick = resetGame;
+}
+
+
+function resetGame() {
+    started = false;
+    finished = false;
+    hintIndex = 0;
+    hintsUsed = 0;
+    errors = 0;
+    seconds = 0;
+    currentCity = null;
+    currentHints = [];
+
+    clearInterval(timerInterval);
+    timerInterval = null;
+
+    document.getElementById("guessInput").value = "";
+    document.getElementById("guessInput").disabled = true;
+    document.getElementById("checkBtn").disabled = true;
+    document.getElementById("mainBtn").textContent = "Start";
+    document.getElementById("mainBtn").onclick = handleMain;
+
+    document.getElementById("hintsCount").textContent = "0";
+    document.getElementById("errorsCount").textContent = "0";
+    document.getElementById("timer").textContent = "00:00";
+    document.getElementById("success").style.color = "#7CFC98";
+    document.getElementById("success").textContent = "";
+    document.getElementById("summary").innerHTML = "";
+    document.getElementById("hints").innerHTML = "";
+    document.getElementById("feedback").textContent = "";
+}
+
+
+</script>
+
+
+</body>
+</html>
