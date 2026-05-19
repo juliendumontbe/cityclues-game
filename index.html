@@ -201,7 +201,40 @@ button {
 </div>
 
 
-<script>
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+    getFirestore,
+    collection,
+    addDoc
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+
+  apiKey: "AIzaSyCRP_xzFvunynLlmGUjq-HFXBZpIWgS8xU",
+
+  authDomain: "cityclues-game.firebaseapp.com",
+
+  projectId: "cityclues-game",
+
+  storageBucket: "cityclues-game.firebasestorage.app",
+
+  messagingSenderId: "550140728781",
+
+  appId: "1:550140728781:web:205dfa4d1e4fb1293c2084"
+};
+
+const firebaseApp =
+    initializeApp(firebaseConfig);
+
+const db =
+    getFirestore(firebaseApp);
+
+
 let cities = [];
 let hintDefinitions = [];
 let currentCity = null;
@@ -234,15 +267,37 @@ function getStoredEvents() {
     );
 }
 
-function saveEvent(event) {
-    const events = getStoredEvents();
+async function saveEvent(event) {
 
-    events.push(event);
+    try {
 
-    localStorage.setItem(
-        "cityclues_events",
-        JSON.stringify(events)
-    );
+        const events =
+            getStoredEvents();
+
+        events.push(event);
+
+        localStorage.setItem(
+            "cityclues_events",
+            JSON.stringify(events)
+        );
+
+        await addDoc(
+            collection(db, "cityclues_events"),
+            event
+        );
+
+        console.log(
+            "Firebase event sent:",
+            event
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Firebase send failed:",
+            error
+        );
+    }
 }
 
 function getNowTimestamp() {
@@ -439,6 +494,8 @@ function shuffleArray(array) {
     return array.sort(() => Math.random() - 0.5);
 }
 
+
+
 function generateHints(city, hints) {
 
     const filteredHints = hints.filter(hint =>
@@ -465,28 +522,34 @@ function generateHints(city, hints) {
 
     orderedStages.forEach(stage => {
 
-        const shuffledStageHints =
-            shuffleArray(groupedByStage[stage]);
+        const hintsForStage = groupedByStage[stage];
 
-        finalHints = finalHints.concat(shuffledStageHints);
+        const selectedHint =
+            hintsForStage[
+                Math.floor(Math.random() * hintsForStage.length)
+            ];
+
+        finalHints.push(selectedHint);
     });
 
-return finalHints
-    .map(hint => {
-        const hintText = applyTemplate(hint.hint_template, city);
+    return finalHints
+        .map(hint => {
+            const hintText = applyTemplate(hint.hint_template, city);
 
-        return {
-            hint_id: hint.hint_id,
-            hint_stage: hint.hint_stage,
-            hint_text: hintText
-        };
-    })
-    .filter(hint =>
-        hint.hint_text &&
-        !hint.hint_text.includes("{") &&
-        !hint.hint_text.includes("}")
-    );
+            return {
+                hint_id: hint.hint_id,
+                hint_stage: hint.hint_stage,
+                hint_text: hintText
+            };
+        })
+        .filter(hint =>
+            hint.hint_text &&
+            !hint.hint_text.includes("{") &&
+            !hint.hint_text.includes("}")
+        );
 }
+
+
 function applyTemplate(template, city) {
     return template.replace(/\{([^}]+)\}/g, function(match, fieldName) {
         const normalizedField = fieldName.trim().toLowerCase();
@@ -829,6 +892,11 @@ function resetGame() {
     document.getElementById("feedback").textContent = "";
 }
 
+window.handleMain = handleMain;
+window.checkGuess = checkGuess;
+window.resetGame = resetGame;
+window.exportEvents = exportEvents;
+window.clearEvents = clearEvents;
 
 </script>
 
