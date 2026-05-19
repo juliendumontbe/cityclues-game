@@ -522,14 +522,10 @@ function generateHints(city, hints) {
 
     orderedStages.forEach(stage => {
 
-        const hintsForStage = groupedByStage[stage];
+        const shuffledHints =
+            shuffleArray(groupedByStage[stage]);
 
-        const selectedHint =
-            hintsForStage[
-                Math.floor(Math.random() * hintsForStage.length)
-            ];
-
-        finalHints.push(selectedHint);
+        finalHints = finalHints.concat(shuffledHints);
     });
 
     return finalHints
@@ -548,7 +544,6 @@ function generateHints(city, hints) {
             !hint.hint_text.includes("}")
         );
 }
-
 
 function applyTemplate(template, city) {
     return template.replace(/\{([^}]+)\}/g, function(match, fieldName) {
