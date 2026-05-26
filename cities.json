@@ -2374,10 +2374,10 @@
     "is_local_time_available":true,
     "difficulty_initial":0.3966,
     "difficulty_simulated":null,
-    "difficulty_real":null,
+    "difficulty_real":0.3966,
     "difficulty_score_default":null,
     "nb_sessions_simulated":null,
-    "nb_sessions_real":null
+    "nb_sessions_real":1.0
   },
   {
     "city_id":3703443,
@@ -2544,10 +2544,10 @@
     "is_local_time_available":true,
     "difficulty_initial":0.0757,
     "difficulty_simulated":null,
-    "difficulty_real":null,
+    "difficulty_real":0.0757,
     "difficulty_score_default":null,
     "nb_sessions_simulated":null,
-    "nb_sessions_real":null
+    "nb_sessions_real":1.0
   },
   {
     "city_id":909137,
@@ -3227,7 +3227,7 @@
     "difficulty_real":0.2464,
     "difficulty_score_default":null,
     "nb_sessions_simulated":null,
-    "nb_sessions_real":1.0
+    "nb_sessions_real":2.0
   },
   {
     "city_id":1138958,
@@ -3360,10 +3360,10 @@
     "is_local_time_available":true,
     "difficulty_initial":0.3118,
     "difficulty_simulated":null,
-    "difficulty_real":null,
+    "difficulty_real":0.3118,
     "difficulty_score_default":null,
     "nb_sessions_simulated":null,
-    "nb_sessions_real":null
+    "nb_sessions_real":1.0
   },
   {
     "city_id":1871859,
@@ -3666,10 +3666,10 @@
     "is_local_time_available":true,
     "difficulty_initial":0.0542,
     "difficulty_simulated":null,
-    "difficulty_real":null,
+    "difficulty_real":0.0542,
     "difficulty_score_default":null,
     "nb_sessions_simulated":null,
-    "nb_sessions_real":null
+    "nb_sessions_real":1.0
   },
   {
     "city_id":498817,
@@ -4179,7 +4179,7 @@
     "difficulty_real":0.0212,
     "difficulty_score_default":null,
     "nb_sessions_simulated":null,
-    "nb_sessions_real":1.0
+    "nb_sessions_real":2.0
   },
   {
     "city_id":1835848,
@@ -4281,7 +4281,7 @@
     "difficulty_real":0.0998,
     "difficulty_score_default":null,
     "nb_sessions_simulated":null,
-    "nb_sessions_real":1.0
+    "nb_sessions_real":2.0
   },
   {
     "city_id":3652462,
