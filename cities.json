@@ -1252,10 +1252,10 @@
     "is_local_time_available":true,
     "difficulty_initial":0.0834,
     "difficulty_simulated":0.2616,
-    "difficulty_real":null,
+    "difficulty_real":0.0834,
     "difficulty_score_default":0.2616,
     "nb_sessions_simulated":12.0,
-    "nb_sessions_real":null
+    "nb_sessions_real":1.0
   },
   {
     "city_id":1880252,
@@ -2952,10 +2952,10 @@
     "is_local_time_available":true,
     "difficulty_initial":0.1878,
     "difficulty_simulated":null,
-    "difficulty_real":null,
+    "difficulty_real":0.1878,
     "difficulty_score_default":null,
     "nb_sessions_simulated":null,
-    "nb_sessions_real":null
+    "nb_sessions_real":1.0
   },
   {
     "city_id":2253354,
