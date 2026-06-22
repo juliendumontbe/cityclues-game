@@ -538,10 +538,10 @@
     "is_local_time_available":true,
     "difficulty_initial":0.4772,
     "difficulty_simulated":0.2822,
-    "difficulty_real":null,
+    "difficulty_real":0.4772,
     "difficulty_score_default":0.2822,
     "nb_sessions_simulated":16.0,
-    "nb_sessions_real":null
+    "nb_sessions_real":1.0
   },
   {
     "city_id":2759794,
@@ -572,10 +572,10 @@
     "is_local_time_available":true,
     "difficulty_initial":0.4056,
     "difficulty_simulated":0.2748,
-    "difficulty_real":null,
+    "difficulty_real":0.4056,
     "difficulty_score_default":0.2748,
     "nb_sessions_simulated":16.0,
-    "nb_sessions_real":null
+    "nb_sessions_real":1.0
   },
   {
     "city_id":3060972,
@@ -1864,10 +1864,10 @@
     "is_local_time_available":true,
     "difficulty_initial":0.1178,
     "difficulty_simulated":null,
-    "difficulty_real":0.1178,
+    "difficulty_real":0.3191,
     "difficulty_score_default":null,
     "nb_sessions_simulated":null,
-    "nb_sessions_real":2.0
+    "nb_sessions_real":3.0
   },
   {
     "city_id":292968,
@@ -2204,10 +2204,10 @@
     "is_local_time_available":true,
     "difficulty_initial":0.7114,
     "difficulty_simulated":null,
-    "difficulty_real":null,
+    "difficulty_real":0.7114,
     "difficulty_score_default":null,
     "nb_sessions_simulated":null,
-    "nb_sessions_real":null
+    "nb_sessions_real":1.0
   },
   {
     "city_id":3576022,
@@ -3054,10 +3054,10 @@
     "is_local_time_available":true,
     "difficulty_initial":0.0758,
     "difficulty_simulated":null,
-    "difficulty_real":0.2624,
+    "difficulty_real":0.2644,
     "difficulty_score_default":null,
     "nb_sessions_simulated":null,
-    "nb_sessions_real":3.0
+    "nb_sessions_real":4.0
   },
   {
     "city_id":1581130,
@@ -4454,40 +4454,6 @@
     "nb_sessions_real":null
   },
   {
-    "city_id":1668341,
-    "city_name":"Taipei",
-    "hemisphere":"northern hemisphere",
-    "global_quadrant":"north-east",
-    "longitudinal_zone":"eastern hemisphere",
-    "is_capital":true,
-    "coastal_distance_category":"near-coastal",
-    "altitude_category":"low",
-    "city_category":"large City",
-    "city_name_length_category":"medium name",
-    "city_word_count_category":"single word",
-    "city_first_letter":"T",
-    "city_last_letter":"i",
-    "continent":"Asia",
-    "country_name":"Taiwan",
-    "country_density_category":"very high",
-    "country_category":"mid-sized",
-    "languages_count":4,
-    "currency_name":"Dollar",
-    "neighbours_count":0,
-    "temperature":34.39,
-    "weather_type":"clear",
-    "timezone_offset_sec":28800,
-    "utc_offset_hours":8.0,
-    "is_weather_available":true,
-    "is_local_time_available":true,
-    "difficulty_initial":0.11,
-    "difficulty_simulated":null,
-    "difficulty_real":null,
-    "difficulty_score_default":null,
-    "nb_sessions_simulated":null,
-    "nb_sessions_real":null
-  },
-  {
     "city_id":2293538,
     "city_name":"Abidjan",
     "hemisphere":"northern hemisphere",
@@ -4930,6 +4896,40 @@
     "nb_sessions_real":3.0
   },
   {
+    "city_id":1668341,
+    "city_name":"Taipei",
+    "hemisphere":"northern hemisphere",
+    "global_quadrant":"north-east",
+    "longitudinal_zone":"eastern hemisphere",
+    "is_capital":true,
+    "coastal_distance_category":"near-coastal",
+    "altitude_category":"low",
+    "city_category":"large City",
+    "city_name_length_category":"medium name",
+    "city_word_count_category":"single word",
+    "city_first_letter":"T",
+    "city_last_letter":"i",
+    "continent":"Asia",
+    "country_name":"Taiwan",
+    "country_density_category":"very high",
+    "country_category":"mid-sized",
+    "languages_count":4,
+    "currency_name":"Dollar",
+    "neighbours_count":0,
+    "temperature":34.39,
+    "weather_type":"clear",
+    "timezone_offset_sec":28800,
+    "utc_offset_hours":8.0,
+    "is_weather_available":true,
+    "is_local_time_available":true,
+    "difficulty_initial":0.11,
+    "difficulty_simulated":null,
+    "difficulty_real":0.11,
+    "difficulty_score_default":null,
+    "nb_sessions_simulated":null,
+    "nb_sessions_real":1.0
+  },
+  {
     "city_id":1642911,
     "city_name":"Jakarta",
     "hemisphere":"southern hemisphere",
@@ -5233,7 +5233,7 @@
     "difficulty_real":0.4017,
     "difficulty_score_default":null,
     "nb_sessions_simulated":null,
-    "nb_sessions_real":1.0
+    "nb_sessions_real":2.0
   },
   {
     "city_id":3513090,
