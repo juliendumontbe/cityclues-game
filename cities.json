@@ -1286,10 +1286,10 @@
     "is_local_time_available":true,
     "difficulty_initial":0.0834,
     "difficulty_simulated":0.2387,
-    "difficulty_real":0.2386,
+    "difficulty_real":0.2471,
     "difficulty_score_default":0.2387,
     "nb_sessions_simulated":12.0,
-    "nb_sessions_real":3.0
+    "nb_sessions_real":4.0
   },
   {
     "city_id":1880252,
@@ -1320,10 +1320,10 @@
     "is_local_time_available":true,
     "difficulty_initial":0.1518,
     "difficulty_simulated":0.2215,
-    "difficulty_real":0.2704,
+    "difficulty_real":0.2776,
     "difficulty_score_default":0.2215,
     "nb_sessions_simulated":19.0,
-    "nb_sessions_real":3.0
+    "nb_sessions_real":4.0
   },
   {
     "city_id":1609350,
@@ -1966,10 +1966,10 @@
     "is_local_time_available":true,
     "difficulty_initial":0.3214,
     "difficulty_simulated":null,
-    "difficulty_real":null,
+    "difficulty_real":0.3214,
     "difficulty_score_default":null,
     "nb_sessions_simulated":null,
-    "nb_sessions_real":null
+    "nb_sessions_real":1.0
   },
   {
     "city_id":3492908,
@@ -2343,7 +2343,7 @@
     "difficulty_real":0.0542,
     "difficulty_score_default":null,
     "nb_sessions_simulated":null,
-    "nb_sessions_real":1.0
+    "nb_sessions_real":2.0
   },
   {
     "city_id":344979,
@@ -6760,10 +6760,10 @@
     "is_local_time_available":true,
     "difficulty_initial":0.4887,
     "difficulty_simulated":null,
-    "difficulty_real":null,
+    "difficulty_real":0.4887,
     "difficulty_score_default":null,
     "nb_sessions_simulated":null,
-    "nb_sessions_real":null
+    "nb_sessions_real":1.0
   },
   {
     "city_id":2108502,
